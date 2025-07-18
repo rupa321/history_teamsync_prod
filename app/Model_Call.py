@@ -10,10 +10,10 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 import logging
 import os
 
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
-API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","")
-PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","")
+API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","o8l7Q4LcFCCyZpOrJAdxjhjpCEJgZXfjrmo9VINP2cnA")
+PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","41d71924-826e-4873-a7d3-5a16d198e6f6")
 MODEL_ID = os.getenv("MODEL_ID","meta-llama/llama-3-2-3b-instruct") 
 MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", 8192))
 #---- Deprecated -> got error : message': "Model 'meta-llama/llama-3-1-8b-instruct' is not supported",
@@ -22,10 +22,10 @@ authenticator = IAMAuthenticator(API_TOKEN_IBM)
 token = None
 
 Selected_prompt_NL = Prompt_Config.get_prompt("NLP")
-logger.warning(f"Selected Prompt NL : {Selected_prompt_NL.format(query ='[query]',text='[text]')}")
+logger.info(f"Selected Prompt NLP : {Selected_prompt_NL.format(query ='[query]',text='[text]')}")
 
 Selected_prompt_EXT = Prompt_Config.get_prompt("EXT")
-logger.warning(f"Selected Prompt EXT : {Selected_prompt_EXT.format(query ='[query]',text='[text]')}")
+logger.info(f"Selected Prompt EXT : {Selected_prompt_EXT.format(query ='[query]',text='[text]')}")
 
 
 def retry_get_token(max_retries=3, backoff_factor=2):
@@ -95,7 +95,7 @@ def ibm_cloud(prompt, prompt_type):
     url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/generation?version=2023-05-29"
     
     
-    print('---------- prompt ----------', prompt)
+    # print('---------- prompt ----------', prompt)
     
     # Request body construction
     logger.info("Constructing request body with parameters")
@@ -128,10 +128,7 @@ def ibm_cloud(prompt, prompt_type):
             }
         }
     }
-    
-    logger.info(f"Request body configured with model_id: {MODEL_ID}")
-    logger.info(f"Using project_id: {PROJECT_ID_IBM}")
-    
+
     
     # Headers setup
     headers = {
@@ -139,9 +136,7 @@ def ibm_cloud(prompt, prompt_type):
         "Content-Type": "application/json",
         "Authorization": service
     }
-    logger.info("Request headers configured")
-    
-    # API call with retry mechanism
+
     logger.info("Initiating API call to IBM Watson ML with retry mechanism")
     
     try:
@@ -150,7 +145,7 @@ def ibm_cloud(prompt, prompt_type):
         et = time.time()
         logger.info(f"\n{'-' * 200}\nTIME TAKEN BY CALL TO IBM CLOUD : {et-st} seconds\n{'-' * 200}")
     except Exception as e:
-        logger.warning(f"API call failed with error: {str(e)}")
+        logger.error(f"API call failed with error: {str(e)}")
         return "I am unable to respond right now. Please try again later."
     
     
@@ -165,8 +160,8 @@ def ibm_cloud(prompt, prompt_type):
         # num_tokens_response = len(tokenizer.encode(generated_text))
         # logger.info(f"Generated text tokens: {num_tokens_response if generated_text else 0} tokens")
     except (KeyError, IndexError) as e:
-        logger.warning(f"Failed to extract generated text from response: {str(e)}")
-        logger.warning(f"Response structure: {data}")
+        logger.Error(f"Failed to extract generated text from response: {str(e)}")
+        logger.info(f"Response structure: {data}")
         return "I am unable to respond right now. Please try again later."
     
     # Check if content was moderated

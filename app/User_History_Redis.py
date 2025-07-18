@@ -8,7 +8,8 @@
 # redis_url = "redis://localhost:6379"
 # session_id = "user_124"
 # redis_client = redis.Redis.from_url(redis_url)
-
+import logging
+logger = logging.getLogger(__name__)
 
 def build_prompt( user_message, context):
     # prompt_history = ""
@@ -55,15 +56,15 @@ def build_prompt( user_message, context):
 def store_chat_history(chat_history, user_message, ai_message):
     chat_history.add_user_message(user_message)
     chat_history.add_ai_message(ai_message)
-    print("Chat history stored successfully.")
+    logger.info("Chat history stored successfully.")
 
 def print_chat_history(chat_history):
-    print('Stored chat history:')
+    logger.info('Stored chat history:')
     for message in chat_history.messages:
         if message.type == "human":
-            print(f"User: {message.content}")
+            logger.info(f"User: {message.content}")
         elif message.type == "ai":
-            print(f"AI: {message.content}")
+            logger.info(f"AI: {message.content}")
 
 # def main():
 #     print("-----------------------------------")

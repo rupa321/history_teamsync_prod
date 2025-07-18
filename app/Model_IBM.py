@@ -5,12 +5,12 @@ import time
 import logging
 import Prompt_Config
 
-logger = logging.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 
-API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","")
-PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","")
+API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","o8l7Q4LcFCCyZpOrJAdxjhjpCEJgZXfjrmo9VINP2cnA")
+PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","41d71924-826e-4873-a7d3-5a16d198e6f6")
 MODEL_ID = os.getenv("MODEL_ID","meta-llama/llama-3-3-70b-instruct") 
 MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", 4192))
 
@@ -18,16 +18,16 @@ authenticator = IAMAuthenticator(API_TOKEN_IBM)
 token = None
 
 Selected_prompt_NL = Prompt_Config.get_prompt("NLP")
-if Selected_prompt_NL is not None:
-    logger.warning(f"Selected Prompt NL : {Selected_prompt_NL.format(query='[query]', text='[text]')}")
-else:
-    logger.warning("Selected Prompt NL : None (prompt not found)")
+# if Selected_prompt_NL is not None:
+#     logger.warning(f"Selected Prompt NL : {Selected_prompt_NL.format(query='[query]', text='[text]')}")
+# else:
+#     logger.warning("Selected Prompt NL : None (prompt not found)")
 
 Selected_prompt_EXT = Prompt_Config.get_prompt("EXT")
-if Selected_prompt_EXT is not None:
-    logger.warning(f"Selected Prompt EXT : {Selected_prompt_EXT.format(query='[query]', text='[text]')}")
-else:
-    logger.warning("Selected Prompt EXT : None (prompt not found)")
+# if Selected_prompt_EXT is not None:
+#     logger.warning(f"Selected Prompt EXT : {Selected_prompt_EXT.format(query='[query]', text='[text]')}")
+# else:
+#     logger.warning("Selected Prompt EXT : None (prompt not found)")
 
 
 def retry_get_token(max_retries=3, backoff_factor=2):
@@ -67,7 +67,7 @@ def post_with_retry(url, headers, body, max_retries=5, backoff=2):
     return response
   
 def select_context (question, history, contexts):
-    print(history)
+ 
 
     # Prompt selection based on type
     prompt=f"""
@@ -154,7 +154,7 @@ def select_context (question, history, contexts):
         data = response.json()
     except Exception as e:
         return "I am unable to respond right now. Please try again later. data"
-    print(data)
+    # print(data)
     try:
         generated_text = data['results'][0]['generated_text']
     except (KeyError, IndexError) as e:

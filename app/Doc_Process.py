@@ -10,28 +10,29 @@ from User_History_Redis import build_prompt,store_chat_history
 from langchain_community.chat_message_histories import RedisChatMessageHistory 
 import os
 
-REDIS_URL=os.getenv("REDIS_URL","")
+REDIS_URL=os.getenv("REDIS_URL","redis://localhost:6379")
 ES = Es_Con.ES_connector()
+
+logger = logging.getLogger(__name__)
 
 
 def search_documents_gpt(query_text, user_name, model_type, answerType, path):
-
-    logging.info(f" File with path {path} are being searched by user {user_name}")
+    logger.info(f" File with path {path} are being searched by user {user_name}")
     hits = ES.Search_Docs_gpt(query_text, user_name, path)
     filelist = []
     search_results = []
     #lst = []
-    logging.warning(f"__inside search_documents_gpt of universal docutalk__\n QUERY  :   {query_text} -------------")
+    logger.warning(f"__inside search_documents_gpt of universal docutalk__\n QUERY  :   {query_text} -------------")
     if answerType not in ["singleDocument", "multiDocument"]:
-        logging.warning(f"Unsupported answer type : {answerType}")
+        logger.warning(f"Unsupported answer type : {answerType}")
         return [{"text": f"Unsupported answer type: {answerType}. Supported types: ['singleDocument', 'multiDocument']"}]
 
     if model_type not in ["NLP", "EXT"]:
-        logging.warning(f"Unsupported responses type : {model_type}")
+        logger.warning(f"Unsupported responses type : {model_type}")
         return [{"text": f"Unsupported responses type: {model_type}. Supported types: ['NLP', 'EXT']"}]
 
     if not hits:
-        logging.warning(f"No documents found -->")
+        logger.warning(f"No documents found -->")
         return [{"text": "No documents found for the query."}]
 
     file_id = hits[0]["_source"].get("fId", "")
@@ -70,7 +71,7 @@ def search_documents_gpt(query_text, user_name, model_type, answerType, path):
                 history_chat += "### Previous Question asked by user:"+message.content+"\n"
     
     if not search_results:
-        logging.warning(f"Search Results --> []")
+        logger.warning(f"Search Results --> []")
         return [{"text": "I am unable to provide an answer based on the information I have."}]
 
     if answerType == "singleDocument":
@@ -93,7 +94,7 @@ def search_documents_gpt(query_text, user_name, model_type, answerType, path):
         #     model_answer = using_gemini(combined_text_multi_doc, query_text)
 
     search_results.insert(0, {"text": model_answer})
-    logging.warning(f"search_results :: {search_results}")
+    logger.warning(f"search_results :: {search_results}")
     return search_results
 
 
@@ -140,13 +141,12 @@ def above_and_below_pagedata(text, page_no, file_id):
 
   
     
-def Data_By_FID_1(fid, query, model_type):# ES_Con.Default_size == 1
+def Data_By_FID_1(fid, query, model_type,session_id):# ES_Con.Default_size == 1
 
-    session_id='uuuu' #get session id from frontend
-    logging.warning(f"__inside Data_By_FID_1 of fileid docutalk__\n QUERY  :   {query} -------------")
+    logger.info(f"__inside Data_By_FID_1 of fileid docutalk__\n QUERY  :   {query} -------------")
     if model_type not in ["NLP", "EXT"]:
         outres = f"responses type not match :: {model_type}, responses :: ['NLP', 'EXT']"
-        logging.warning(f"{outres}")
+        logger.warning(f"{outres}")
         return outres
     chat_history = RedisChatMessageHistory(url=REDIS_URL, session_id=session_id, ttl= 400)
     history= chat_history.messages
@@ -161,26 +161,26 @@ def Data_By_FID_1(fid, query, model_type):# ES_Con.Default_size == 1
     hits = ES.Data_By_FID_ES(fid, query)
     try:
         text = hits[0]["_source"].get("text", "")
-        logging.warning(f"-----retrieved text----- \n{text}")
+        logger.info(f"-----retrieved text----- \n{text}")
     except Exception as e:
-        logging.warning(f"No hits from database2 --> {e}")
+        logger.warning(f"No hits from database2 --> {e}")
         return [{"text": "No hits from database"}]
 
     page_no = hits[0]["_source"].get("pageNo", "")
     combined_text = "Context:" + above_and_below_pagedata(text, int(page_no), fid)
     selected_context= select_context(query,history_chat,combined_text)
     # prompt =build_prompt(query,selected_context)
-    model_answer = call.ibm_cloud(query,selected_context, model_type)
+    model_answer = call.ibm_cloud(query,selected_context)
     store_chat_history(chat_history, query, model_answer)
-    logging.warning(f"model_answer --> {model_answer}")
+    logger.info(f"model_answer --> {model_answer}")
     return [{"text": model_answer}]
 
-def Data_By_FID_More(fid, query, model_type): # ES_Con.Default_size != 1
-    session_id='uuuu' #get session id from frontend
-    logging.warning(f"__inside Data_By_FID_More of fileid docutalk__\n QUERY  :   {query} -------------")
+def Data_By_FID_More(fid, query, model_type,session_id): # ES_Con.Default_size != 1
+
+    logger.info(f"__inside Data_By_FID_More of fileid docutalk__\n QUERY  :   {query} -------------")
     if model_type not in ["NLP", "EXT"]:
         outres = f"responses type not match :: {model_type}, responses :: ['NLP', 'EXT']"
-        logging.warning(f"{outres}")
+        logger.error(f"{outres}")
         return outres
     
     chat_history = RedisChatMessageHistory(url=REDIS_URL, session_id=session_id, ttl= 400)
@@ -192,33 +192,35 @@ def Data_By_FID_More(fid, query, model_type): # ES_Con.Default_size != 1
                 history_chat += "### Its Response:" + message.content + "\n"
             elif message.type == "human":
                 history_chat += "### Previous Question asked by user:"+message.content+"\n"
-    hits = ES.Data_By_FID_ES(fid, query)
+    
     combined_text = ""
+    hits = ES.Data_By_FID_ES(fid, query)
     j=0
     if hits:
-        for i in hits:
+        for hit in hits:
             try:
-                text = i["_source"].get("text","")
+                text = hit["_source"].get("text","")
                 if text:
-                    context += f"Context {j+1}: {text}"
-                    combined_text_multi_doc += f"{context}"+  "\n-------------------------\n"
+                    combined_text += f"Context {j+1}: {text}"+  "\n-------------------------\n"
                     j+=1
             except Exception as e:
-                logging.warning(f"Error from elstic data --> ")
+                logger.error(f"Error from elastic data --> ")
 
         if not combined_text:
-            logging.warning(f"No hits from database --> {e} ")
+            logger.warning(f"No hits from database --> {e} ")
             return [{"text": "No hits from database"}]
-        logging.warning(f"------- combined text from Data_By_FID_MORE --------\n {combined_text}")
+        logger.info(f"------- combined text from Data_By_FID_MORE --------\n {combined_text}")
+        logger.info(f"\n\n\n {'_'*25}  Chat History {'_'*25}\n {chat_history} \n\n\n")
         selected_context= select_context(query,history_chat,combined_text)
         # prompt =build_prompt(query,selected_context)
-        model_answer = call.ibm_cloud(query,selected_context, model_type)
+        model_answer = call.ibm_cloud(query,selected_context)
         store_chat_history(chat_history, query, model_answer)
-        logging.warning(f"model_answer --> {model_answer}")
+        logger.info(f"model_answer --> {model_answer}")
         return [{"text": model_answer}] 
     else:
         return [{"text":"No hits from database---"}]
-
+    
+# maybe when just 1 chunk is required or more
 if Es_Con.RESPONSE_SIZE_FOR_FILEID != 1:
     Data_By_FID = Data_By_FID_More
 else:

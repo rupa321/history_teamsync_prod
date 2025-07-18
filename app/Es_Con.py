@@ -8,16 +8,16 @@ from sentence_transformers import SentenceTransformer
 import logging
 
 
-logger = logging.get_logger("Es_Con")
-
-ES_HOST =os.environ["ES_HOST"]
-ES_PORT = int(os.getenv("ES_PORT",9200))
+logger = logging.getLogger(__name__)
+# http://172.168.1.215:30612/
+ES_HOST =os.getenv("ES_HOST","172.168.1.215")
+ES_PORT = int(os.getenv("ES_PORT",30612))
 ELASTIC_PASSWORD =os.getenv("ELASTIC_PASSWORD","admin123")
 ELASTIC_USER =os.getenv("ELASTIC_USER","elastic")
-RESPONSE_SIZE_FOR_FILEID=os.environ.get("RESPONSE_SIZE_FOR_FILEID",5)
-DEFAULT_SIZE_UNIVERSAL=os.environ.get("DEFAULT_SIZE_UNIVERSAL",10)
+RESPONSE_SIZE_FOR_FILEID=os.environ.get("RESPONSE_SIZE_FOR_FILEID",20)
+DEFAULT_SIZE_UNIVERSAL=os.environ.get("DEFAULT_SIZE_UNIVERSAL",30)
 SCHEME=os.environ.get("SCHEME","http")
-DOCUTALK_INDEX=os.getenv("DOCUTALK_INDEX","newteamsyncfirstn") #FIXME
+DOCUTALK_INDEX=os.getenv("DOCUTALK_INDEX","appolonewteamsyncfirstn") #FIXME
 
 Emb_Model = SentenceTransformer("intfloat/multilingual-e5-small")
 
@@ -32,12 +32,6 @@ class ES_connector:
         self.es = Elasticsearch([{'host': ES_HOST, 'port': ES_PORT, 'scheme':SCHEME}],basic_auth=(ELASTIC_USER, ELASTIC_PASSWORD),headers={"Content-Type":"application/json", "Accept": "application/json"})
         
         
-        
-    def get_domain_name(self, username):
-        username = username.replace("@", "_")
-        u1 = username.split('_')[1]
-        domain = u1.split('.')[0]
-        return domain + DOCUTALK_INDEX
         
     def get_all_files_in_folder_path(self, username, path, size=10000):
         domain_index_name = self.get_domain_name(username=username)
@@ -184,9 +178,15 @@ class ES_connector:
                 }
             }
         )
+        # if match['hits']['hits']:
+        #     details = match['hits']['hits']
+        #     return details[0]["fields"]
+
         if match['hits']['hits']:
-            details = match['hits']['hits']
-            return details[0]["fields"]
+            all_text = " ".join(hit["fields"]["text"][0] for hit in match['hits']['hits'])
+            return {"merged_text": all_text}
+        else:
+            return {"merged_text": ""}
 
 
     
