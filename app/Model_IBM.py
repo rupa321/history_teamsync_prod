@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 
-API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","o8l7Q4LcFCCyZpOrJAdxjhjpCEJgZXfjrmo9VINP2cnA")
-PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","41d71924-826e-4873-a7d3-5a16d198e6f6")
-MODEL_ID = os.getenv("MODEL_ID","meta-llama/llama-3-3-70b-instruct") 
+API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","")
+PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","")
+MODEL_ID = os.getenv("MODEL_ID","meta-llama/llama-3-2-3b-instruct") 
 MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", 4192))
 
 authenticator = IAMAuthenticator(API_TOKEN_IBM)
@@ -88,7 +88,7 @@ def select_context (question, history, contexts):
         - Do not add or fabricate question asked by user.
         - Do not use any extra words, just provide the context.
         - Do not show the entire context list, just show the selected context
-        - Provide response strictly on basis of history or question provided and do not use your own knowledge.
+        - Select context strictly on basis of history or question provided and do not use your own knowledge.
 
         """
     
