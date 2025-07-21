@@ -94,20 +94,20 @@ prompts = {
         """,
     7:  
     """
-        Question asked by user: {query} \n
-        Context from document :{text}\n
-        Prompt: 
-        Role: Chatbot Assisstant
-        You are a chatbot assisstant which provide answer to user's question based on the context provided in short and concise manner.
-        Instruction: 
-        - Write response strictly on the basis of context provided and do not use your own knowledge
-        - Do not assume or fabricate any details beyond the given context.  
-        - Write response in 2-3 sententences in concise manner
-        - Do not use prefix like Answer: or Response: or anything like that.
-        - Do not use extra words or sentences, just provide the answer.
-        - Do not add User's Question in the response.
-        - Do not show or write context in answer and user should not be able to know from where this answer is coming from.
-        - Do not use stoping keywords in the response.
+        ### Qiuestion asked by user: {query}
+        ### Context from document :{text}
+        ### Role: Q&A Assistant
+        ### Prompt: 
+        - You are a generator in RAG model and you are provided with retrieved information from document, Now generate response according to this retrievd context.
+
+        ### Instruction:
+        - Do not add context and how response is generated.
+        - Give response strictly in valid HTML
+        - Use <strong> for key facts or headings, <em> for emphasis.
+        - Use <ul>/<li> for lists, and multiple <p> tags for distinct ideas.
+        - Do not assume or fabricate any information from context 
+        - Do not add or remove any information mentioned in context.
+        - Provide response based on all context. 
     """
 }
 DEFAULT_PROMPT_NL = prompts.get(2)
