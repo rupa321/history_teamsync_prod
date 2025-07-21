@@ -1,0 +1,22 @@
+fastapi==0.115.13
+uvicorn==0.33.0
+elasticsearch==8.16.0
+python-multipart
+# langchain_google_genai
+# google
+ibm-cloud-sdk-core
+nltk
+sentence-transformers==2.2.2
+transformers==4.30.2
+huggingface-hub==0.16.4
+torch>=1.6.0
+scikit-learn
+scipy
+numpy
+tqdm
+Pillow
+typing_extensions
+requests
+# google-generativeai 
+word2number 
+spacy
