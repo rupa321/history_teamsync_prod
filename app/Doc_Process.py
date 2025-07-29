@@ -18,7 +18,17 @@ logger = logging.getLogger(__name__)
 
 def search_documents_gpt(query_text, user_name, model_type, answerType, path):
     logger.info(f" File with path {path} are being searched by user {user_name}")
-    hits = ES.Search_Docs_gpt(query_text, user_name, path)
+    chat_history = RedisChatMessageHistory(url=REDIS_URL, session_id=user_name, ttl= 400)
+    history= chat_history.messages
+    history_chat=''
+    last_chats=history[-6:]
+    if last_chats :
+        for message in last_chats:
+            if message.type == "ai":
+                history_chat += "### Its Response:" + message.content + "\n"
+            elif message.type == "human":
+                history_chat += "### Previous Question asked by user:"+message.content+"\n"
+    hits = ES.Search_Docs_gpt(query_text,history_chat, user_name, path)
     filelist = []
     search_results = []
     #lst = []
@@ -43,6 +53,7 @@ def search_documents_gpt(query_text, user_name, model_type, answerType, path):
     i=0
     max_score = hits[0]["_score"]
     threshold = 0.5*max_score
+    context-''
     for hit in hits:
         score = hit["_score"]
         if score >= threshold:
@@ -60,15 +71,7 @@ def search_documents_gpt(query_text, user_name, model_type, answerType, path):
               
                 search_results.append({"filename": filename, "fId": file_id, "page_no": page_no, "score": score})
         
-    chat_history = RedisChatMessageHistory(url=REDIS_URL, session_id=user_name, ttl= 400)
-    history= chat_history.messages
-    history_chat=''
-    if history :
-        for message in history:
-            if message.type == "ai":
-                history_chat += "### Its Response:" + message.content + "\n"
-            elif message.type == "human":
-                history_chat += "### Previous Question asked by user:"+message.content+"\n"
+    
     
     if not search_results:
         logger.warning(f"Search Results --> []")
@@ -107,7 +110,6 @@ def above_and_below_pagedata(text, page_no, file_id):
      It help to get the whole context of the chunk """
     
     #gets whole text from current page (of the chunk)
-    text = ES.Data_By_pageno(page_no_below, file_id)
     #gets text from next page
     page_no_below = page_no + 1
     below_page_text = ES.Data_By_pageno(page_no_below, file_id)
@@ -151,14 +153,15 @@ def Data_By_FID_1(fid, query, model_type,session_id):# ES_Con.Default_size == 1
     chat_history = RedisChatMessageHistory(url=REDIS_URL, session_id=session_id, ttl= 400)
     history= chat_history.messages
     history_chat=''
-    if history :
-        for message in history:
+    last_chats=history[-6:]
+    if last_chats :
+        for message in last_chats:
             if message.type == "ai":
                 history_chat += "### Its Response:" + message.content + "\n"
             elif message.type == "human":
                 history_chat += "### Previous Question asked by user:"+message.content+"\n"
     
-    hits = ES.Data_By_FID_ES(fid, query)
+    hits = ES.Data_By_FID_ES(fid, query, history_chat)
     try:
         text = hits[0]["_source"].get("text", "")
         logger.info(f"-----retrieved text----- \n{text}")
@@ -186,15 +189,16 @@ def Data_By_FID_More(fid, query, model_type,session_id): # ES_Con.Default_size !
     chat_history = RedisChatMessageHistory(url=REDIS_URL, session_id=session_id, ttl= 400)
     history= chat_history.messages
     history_chat=''
-    if history :
-        for message in history:
+    last_chats=history[-6:]
+    if last_chats :
+        for message in last_chats:
             if message.type == "ai":
                 history_chat += "### Its Response:" + message.content + "\n"
             elif message.type == "human":
                 history_chat += "### Previous Question asked by user:"+message.content+"\n"
     
     combined_text = ""
-    hits = ES.Data_By_FID_ES(fid, query)
+    hits = ES.Data_By_FID_ES(fid, query, history_chat)
     j=0
     if hits:
         for hit in hits:

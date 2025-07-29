@@ -94,18 +94,19 @@ prompts = {
         """,
     7:  
     """
-        ### Qiuestion asked by user: {query}
-        ### Context from document :{text}
+       ### Question asked by user: {user_message}
+        ### Context from document :{context}\n
         ### Role: Q&A Assistant
         ### Prompt: 
         - You are a generator in RAG model and you are provided with retrieved information from document, Now generate response according to this retrievd context.
 
         ### Instruction:
         - Do not add context and how response is generated.
-        - Give response strictly in valid HTML
+        - Do not leave any information mentioned in context.
+        - Give response strictly in valid HTML.
         - Use <strong> for key facts or headings, <em> for emphasis.
         - Use <ul>/<li> for lists, and multiple <p> tags for distinct ideas.
-        - Do not assume or fabricate any information from context 
+        - Do not assume or fabricate any information from context .
         - Do not add or remove any information mentioned in context.
         - Provide response based on all context. 
     """

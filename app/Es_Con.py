@@ -59,14 +59,15 @@ class ES_connector:
         return filenames
     
 #__________________________________________________________________________________
-    def Search_Docs_gpt(self, query, username,path,size=DEFAULT_SIZE_UNIVERSAL):
+    def Search_Docs_gpt(self, query, history, username,path,size=DEFAULT_SIZE_UNIVERSAL):
         
         all_files_in_path = self.get_all_files_in_folder_path(username, path)
 
         logger.info(f"All files in the folder path : {path} : \n {all_files_in_path} \n" )
-
-        embedding = Emb_Model.encode(query).tolist()
-        logger.info(f'Embedding generated for query : {query} -- > \n EMBEDDING  : {embedding}')
+# e
+        query_embedding = Emb_Model.encode(query).tolist()
+        history_embedding= Emb_Model.encode(history).tolist()
+        logger.info(f'Embedding generated for query : {query} -- > \n EMBEDDING  : {query_embedding}')
         logger.info(f"Username : {username}\t path : {path}\t Index selected : {DOCUTALK_INDEX}")
 
         response = self.es.search(
@@ -80,20 +81,30 @@ class ES_connector:
                             {"match_phrase_prefix": {"path.text": path}}, 
                             {
                                 "bool": {
-                                    "should": [
+                                    "should":[
                                         {
-                                    "knn": {
-                                        "field": "text_embedding",
-                                        "query_vector": embedding,
-                                        "k": size,
-                                        "num_candidates": 100  # Adjust for better results
-                                    }
-                                    },
-                                    {
-                                    "match": {
-                                        "text": query  # Match exact phrase in the text field
-                                    }
-                                    }
+                                            "knn": {
+                                                "field": "embedding",  
+                                                "query_vector": query_embedding,  
+                                                "k": size,  
+                                                "num_candidates": 200 ,
+                                                "boost":2
+                                            }
+                                        },
+                                        {
+                                            "match": {
+                                                "text": query 
+                                            }
+                                        },
+                                        {
+                                            "knn": {
+                                                "field": "embedding",  
+                                                "query_vector": history_embedding,  
+                                                "k": size,  
+                                                "num_candidates": 100,
+                                                "boost":0.5
+                                            }
+                                        }
                                     ]
                                 }
                             }
@@ -112,8 +123,9 @@ class ES_connector:
 
 #__________________________________________________________________________________
       
-    def Data_By_FID_ES(self, f_id, query,size=RESPONSE_SIZE_FOR_FILEID):
-        embedding = Emb_Model.encode(query).tolist()
+    def Data_By_FID_ES(self, f_id, query, history,size=RESPONSE_SIZE_FOR_FILEID):
+        query_embedding = Emb_Model.encode(query).tolist()
+        history_embedding = Emb_Model.encode(history).tolist()
         
         logger.info(f"Index selected 1: {DOCUTALK_INDEX}")
         
@@ -127,18 +139,28 @@ class ES_connector:
                             {"match": {"fId": f_id}},  # Filter by fid
                             {
                                 "bool": {
-                                    "should": [
+                                    "should":[
                                         {
-                                        "knn": {
-                                            "field": "text_embedding",
-                                            "query_vector": embedding,
-                                            "k": size,
-                                            "num_candidates": 100  # Adjust for better results
-                                        }
+                                            "knn": {
+                                                "field": "embedding",  
+                                                "query_vector": query_embedding,  
+                                                "k": size,  
+                                                "num_candidates": 200 ,
+                                                "boost":2
+                                            }
                                         },
                                         {
                                             "match": {
-                                                "text": query  # Match exact phrase in the text field
+                                                "text": query 
+                                            }
+                                        },
+                                        {
+                                            "knn": {
+                                                "field": "embedding",  
+                                                "query_vector": history_embedding,  
+                                                "k": size,  
+                                                "num_candidates": 100,
+                                                "boost":0.5
                                             }
                                         }
                                     ]
