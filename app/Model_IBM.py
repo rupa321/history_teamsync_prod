@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 API_TOKEN_IBM = os.getenv("API_TOKEN_IBM","")
 PROJECT_ID_IBM = os.getenv("PROJECT_ID_IBM","")
-MODEL_ID = os.getenv("MODEL_ID","meta-llama/llama-3-2-3b-instruct") 
+MODEL_ID = os.getenv("MODEL_ID","meta-llama/llama-3-3-70b-instruct") 
 MAX_NEW_TOKENS = int(os.getenv("MAX_NEW_TOKENS", 4192))
 
 authenticator = IAMAuthenticator(API_TOKEN_IBM)
@@ -71,25 +71,23 @@ def select_context (question, history, contexts):
 
     # Prompt selection based on type
     prompt=f"""
-        Question: {question}
+       Question: {question}
         Chat History: {history} 
         Contexts: {contexts} 
         Prompt: 
-        - Select one context out of these contexts that is most relevant according to user's last Response history only or Question asked by user.
-        - Write response strictly based on given instructions
+        - Select all relevant contexts out of these contexts list that is most relevant according to Question asked by user and User's chat history.
+        - Write response strictly based on given instructions.
 
-        
         Instruction:
-        - Do not show the entire context list, just show the selected context
+        - Do not show the entire context list and response, just show the selected context.
+        - Do not add any Note in response.
         - Select the context not only based on its heading but also consider its content while selection.
-        - If there is not Response history then select on basis of question asked by user, and give that context as a response in text.
-        - If the Response history does not match with question aksked, then select context on basis of question asked by user.
+        - If there is no Chat history then select on basis of question asked by user, and give that context as a response in text.
+        - If the Chat history does not match with question aksked, then select context on basis of question asked by user.
         - Each context is seperated by '-------------------------' and strictly consider this as sepearator between contexts.
         - Do not add or fabricate question asked by user.
-        - Do not use any extra words, just provide the context.
-        - Do not show the entire context list, just show the selected context
+        - Do not convert response in HTML format.
         - Select context strictly on basis of history or question provided and do not use your own knowledge.
-
         """
     
     # Authentication

@@ -64,7 +64,7 @@ class ES_connector:
         all_files_in_path = self.get_all_files_in_folder_path(username, path)
 
         logger.info(f"All files in the folder path : {path} : \n {all_files_in_path} \n" )
-
+# e
         query_embedding = Emb_Model.encode(query).tolist()
         history_embedding= Emb_Model.encode(history).tolist()
         logger.info(f'Embedding generated for query : {query} -- > \n EMBEDDING  : {query_embedding}')
